@@ -1298,18 +1298,20 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&rb)
 	if err != nil {
 		outputErrorMsg(w, http.StatusBadRequest, "json decode error")
+		log.Print(err)
 		return
 	}
 
 	if rb.CSRFToken != getCSRFToken(r) {
 		outputErrorMsg(w, http.StatusUnprocessableEntity, "csrf token error")
-
+		log.Print(err)
 		return
 	}
 
 	buyer, errCode, errMsg := getUser(r)
 	if errMsg != "" {
 		outputErrorMsg(w, errCode, errMsg)
+		log.Print(err)
 		return
 	}
 
@@ -1319,6 +1321,7 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 	err = tx.Get(&targetItem, "SELECT * FROM `items` WHERE `id` = ? FOR UPDATE", rb.ItemID)
 	if err == sql.ErrNoRows {
 		outputErrorMsg(w, http.StatusNotFound, "item not found")
+		log.Print(err)
 		tx.Rollback()
 		return
 	}
@@ -1326,18 +1329,21 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 
 		outputErrorMsg(w, http.StatusInternalServerError, "db error")
+		log.Print(err)
 		tx.Rollback()
 		return
 	}
 
 	if targetItem.Status != ItemStatusOnSale {
 		outputErrorMsg(w, http.StatusForbidden, "item is not for sale")
+		log.Print(err)
 		tx.Rollback()
 		return
 	}
 
 	if targetItem.SellerID == buyer.ID {
 		outputErrorMsg(w, http.StatusForbidden, "自分の商品は買えません")
+		log.Print(err)
 		tx.Rollback()
 		return
 	}
