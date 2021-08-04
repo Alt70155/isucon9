@@ -281,6 +281,8 @@ func init() {
 var (
 	categoryList = make(map[int]*Category)
 	categoryAll  = []*Category{}
+	soldOutList  = make(map[int]*Item)
+	soldOutAll   = []*Item{}
 )
 
 func main() {
@@ -336,6 +338,17 @@ func main() {
 
 	for _, cate := range categoryAll {
 		categoryList[cate.ID] = cate
+	}
+
+	soldOutList = make(map[int]*Item)
+	soldOutAll = []*Item{}
+	err = dbx.Select(&soldOutAll, "SELECT * FROM items where status = 'sold_out")
+	if err != nil {
+		log.Fatalf("failed to sold out select query: %s.", err.Error())
+	}
+
+	for _, item := range soldOutAll {
+		soldOutList[int(item.ID)] = item
 	}
 
 	// API
@@ -1318,6 +1331,16 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 	tx := dbx.MustBegin()
 
 	targetItem := Item{}
+
+	_, ok := soldOutList[int(rb.ItemID)]
+
+	if ok == false {
+		outputErrorMsg(w, http.StatusForbidden, "item is not for sale")
+		log.Print(err, "item is not for sale", targetItem.ID)
+		tx.Rollback()
+		return
+	}
+
 	err = tx.Get(&targetItem, "SELECT * FROM `items` WHERE `id` = ? FOR UPDATE", rb.ItemID)
 	if err == sql.ErrNoRows {
 		outputErrorMsg(w, http.StatusNotFound, "item not found")
