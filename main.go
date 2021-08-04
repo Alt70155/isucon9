@@ -342,7 +342,7 @@ func main() {
 
 	soldOutList = make(map[int]*Item)
 	soldOutAll = []*Item{}
-	err = dbx.Select(&soldOutAll, "SELECT * FROM items where status = 'sold_out")
+	err = dbx.Select(&soldOutAll, "SELECT * FROM items where status = 'sold_out'")
 	if err != nil {
 		log.Fatalf("failed to sold out select query: %s.", err.Error())
 	}
