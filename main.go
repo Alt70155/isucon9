@@ -262,10 +262,10 @@ type reqBump struct {
 }
 
 type resSetting struct {
-	CSRFToken         string     `json:"csrf_token"`
-	PaymentServiceURL string     `json:"payment_service_url"`
-	User              *User      `json:"user,omitempty"`
-	Categories        []Category `json:"categories"`
+	CSRFToken         string      `json:"csrf_token"`
+	PaymentServiceURL string      `json:"payment_service_url"`
+	User              *User       `json:"user,omitempty"`
+	Categories        []*Category `json:"categories"`
 }
 
 func init() {
@@ -280,6 +280,7 @@ func init() {
 
 var (
 	categoryList = make(map[int]*Category)
+	categoryAll  = []*Category{}
 )
 
 func main() {
@@ -327,7 +328,7 @@ func main() {
 
 	// メモ化
 	categoryList = make(map[int]*Category)
-	categoryAll := []*Category{}
+	categoryAll = []*Category{}
 	err = dbx.Select(&categoryAll, "SELECT * FROM categories")
 	if err != nil {
 		log.Fatalf("failed to category select query: %s.", err.Error())
@@ -2168,15 +2169,15 @@ func getSettings(w http.ResponseWriter, r *http.Request) {
 
 	ress.PaymentServiceURL = getPaymentServiceURL()
 
-	categories := []Category{}
+	// categories := []Category{}
 
-	err := dbx.Select(&categories, "SELECT * FROM `categories`")
-	if err != nil {
-		log.Print(err)
-		outputErrorMsg(w, http.StatusInternalServerError, "db error")
-		return
-	}
-	ress.Categories = categories
+	// err := dbx.Select(&categories, "SELECT * FROM `categories`")
+	// if err != nil {
+	// 	log.Print(err)
+	// 	outputErrorMsg(w, http.StatusInternalServerError, "db error")
+	// 	return
+	// }
+	ress.Categories = categoryAll
 
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	json.NewEncoder(w).Encode(ress)
