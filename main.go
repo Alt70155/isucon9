@@ -424,16 +424,26 @@ func getUserSimpleByID(q sqlx.Queryer, userID int64) (userSimple UserSimple, err
 	return userSimple, err
 }
 
-func getCategoryByID(q sqlx.Queryer, categoryID int) (category Category, err error) {
-	err = sqlx.Get(q, &category, "SELECT * FROM `categories` WHERE `id` = ?", categoryID)
-	if category.ParentID != 0 {
-		parentCategory, err := getCategoryByID(q, category.ParentID)
+func getCategoryByID(q sqlx.Queryer, categoryID int) (myCategory *Category, err error) {
+	// err = sqlx.Get(q, &category, "SELECT * FROM `categories` WHERE `id` = ?", categoryID)
+	// if category.ParentID != 0 {
+	// 	parentCategory, err := getCategoryByID(q, category.ParentID)
+	// 	if err != nil {
+	// 		return category, err
+	// 	}
+	// 	category.ParentCategoryName = parentCategory.CategoryName
+	// }
+
+	myCategory = categoryList[categoryID]
+	if myCategory.ParentID != 0 {
+		parentCategory, err := getCategoryByID(q, myCategory.ParentID)
 		if err != nil {
-			return category, err
+			return myCategory, err
 		}
-		category.ParentCategoryName = parentCategory.CategoryName
+		myCategory.ParentCategoryName = parentCategory.CategoryName
 	}
-	return category, err
+
+	return myCategory, err
 }
 
 func getConfigByName(name string) (string, error) {
