@@ -278,6 +278,10 @@ func init() {
 	))
 }
 
+var (
+	categoryList = make(map[int]*Category)
+)
+
 func main() {
 	host := os.Getenv("MYSQL_HOST")
 	if host == "" {
@@ -320,6 +324,18 @@ func main() {
 	defer dbx.Close()
 
 	mux := goji.NewMux()
+
+	// メモ化
+	categoryList = make(map[int]*Category)
+	categoryAll := []*Category{}
+	err = dbx.Select(&categoryAll, "SELECT * FROM categories")
+	if err != nil {
+		log.Fatalf("failed to category select query: %s.", err.Error())
+	}
+
+	for _, cate := range categoryAll {
+		categoryList[cate.ID] = cate
+	}
 
 	// API
 	mux.HandleFunc(pat.Post("/initialize"), postInitialize)
