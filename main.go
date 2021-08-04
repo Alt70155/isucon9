@@ -1336,7 +1336,7 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 
 	if targetItem.Status != ItemStatusOnSale {
 		outputErrorMsg(w, http.StatusForbidden, "item is not for sale")
-		log.Print(err)
+		log.Print(err, "item is not for sale", targetItem.ID)
 		tx.Rollback()
 		return
 	}
