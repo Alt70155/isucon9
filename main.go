@@ -1336,7 +1336,7 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 
 	if ok {
 		outputErrorMsg(w, http.StatusForbidden, "item is not for sale")
-		log.Print(err, "MEMO：item is not for sale", targetItem.ID)
+		log.Print(err, "MEMO：item is not for sale", rb.ItemID)
 		tx.Rollback()
 		return
 	}
@@ -1358,6 +1358,8 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if targetItem.Status != ItemStatusOnSale {
+		log.Print(err, "Add soldOutList", targetItem.ID)
+		soldOutList[int(rb.ItemID)] = &targetItem
 		outputErrorMsg(w, http.StatusForbidden, "item is not for sale")
 		log.Print(err, "item is not for sale", targetItem.ID)
 		tx.Rollback()
@@ -1509,8 +1511,8 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	json.NewEncoder(w).Encode(resBuy{TransactionEvidenceID: transactionEvidenceID})
 
+	log.Print(err, "Add soldOutList", targetItem.ID)
 	soldOutList[int(rb.ItemID)] = &targetItem
-
 }
 
 func postShip(w http.ResponseWriter, r *http.Request) {
