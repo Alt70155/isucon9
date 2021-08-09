@@ -1338,21 +1338,23 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tx := dbx.MustBegin()
+
 	targetItem := Item{}
 
-	// _, ok := soldOutList[int(rb.ItemID)]
+	_, ok := soldOutList[int(rb.ItemID)]
 
-	// if ok {
-	// 	outputErrorMsg(w, http.StatusForbidden, "item is not for sale")
-	// 	log.Print(err, "MEMO：item is not for sale", rb.ItemID)
-	// 	tx.Rollback()
-	// 	return
-	// }
+	if ok {
+		outputErrorMsg(w, http.StatusForbidden, "item is not for sale")
+		log.Print(err, "MEMO：item is not for sale", rb.ItemID)
+		tx.Rollback()
+		return
+	}
 
 	err = tx.Get(&targetItem, "SELECT * FROM `items` WHERE `id` = ? FOR UPDATE", rb.ItemID)
 	if err == sql.ErrNoRows {
 		outputErrorMsg(w, http.StatusNotFound, "item not found")
 		log.Print(err)
+		tx.Rollback()
 		return
 	}
 	if err != nil {
@@ -1360,23 +1362,26 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 
 		outputErrorMsg(w, http.StatusInternalServerError, "db error")
 		log.Print(err)
+		tx.Rollback()
 		return
 	}
 
 	if targetItem.Status != ItemStatusOnSale {
-		// _, ok := soldOutList[int(rb.ItemID)]
-		// if ok == false {
-		// 	log.Print(err, "Add soldOutList1", targetItem.ID)
-		// 	soldOutList[int(rb.ItemID)] = &targetItem
-		// }
+		_, ok := soldOutList[int(rb.ItemID)]
+		if ok == false {
+			log.Print(err, "Add soldOutList1", targetItem.ID)
+			soldOutList[int(rb.ItemID)] = &targetItem
+		}
 		outputErrorMsg(w, http.StatusForbidden, "item is not for sale")
 		log.Print(err, "item is not for sale", targetItem.ID)
+		tx.Rollback()
 		return
 	}
 
 	if targetItem.SellerID == buyer.ID {
 		outputErrorMsg(w, http.StatusForbidden, "自分の商品は買えません")
 		log.Print(err)
+		tx.Rollback()
 		return
 	}
 
@@ -1384,20 +1389,23 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 	err = tx.Get(&seller, "SELECT * FROM `users` WHERE `id` = ? FOR UPDATE", targetItem.SellerID)
 	if err == sql.ErrNoRows {
 		outputErrorMsg(w, http.StatusNotFound, "seller not found")
+		tx.Rollback()
 		return
 	}
 	if err != nil {
 		log.Print(err)
 
 		outputErrorMsg(w, http.StatusInternalServerError, "db error")
+		tx.Rollback()
 		return
 	}
 
-	category, err := getCategoryByID(dbx, targetItem.CategoryID)
+	category, err := getCategoryByID(tx, targetItem.CategoryID)
 	if err != nil {
 		log.Print(err)
 
 		outputErrorMsg(w, http.StatusInternalServerError, "category id error")
+		tx.Rollback()
 		return
 	}
 
@@ -1416,6 +1424,7 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 
 		outputErrorMsg(w, http.StatusInternalServerError, "db error")
+		tx.Rollback()
 		return
 	}
 
@@ -1424,6 +1433,7 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 
 		outputErrorMsg(w, http.StatusInternalServerError, "db error")
+		tx.Rollback()
 		return
 	}
 
@@ -1437,6 +1447,7 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 
 		outputErrorMsg(w, http.StatusInternalServerError, "db error")
+		tx.Rollback()
 		return
 	}
 
@@ -1468,55 +1479,21 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// var scr *APIShipmentCreateRes
-	// var scrErr error
-	// var wg sync.WaitGroup
-
-	// wg.Add(1)
-	// go func() {
-	// 	defer wg.Done()
-	// 	scr, scrErr = APIShipmentCreate(getShipmentServiceURL(), &APIShipmentCreateReq{
-	// 		ToAddress:   buyer.Address,
-	// 		ToName:      buyer.AccountName,
-	// 		FromAddress: seller.Address,
-	// 		FromName:    seller.AccountName,
-	// 	})
-	// }()
-
-	// pstr, err := APIPaymentToken(getPaymentServiceURL(), &APIPaymentServiceTokenReq{
-	// 	ShopID: PaymentServiceIsucariShopID,
-	// 	Token:  rb.Token,
-	// 	APIKey: PaymentServiceIsucariAPIKey,
-	// 	Price:  targetItem.Price,
-	// })
-	// if err != nil {
-	// 	log.Print(err)
-
-	// 	outputErrorMsg(w, http.StatusInternalServerError, "payment service is failed")
-	// 	return
-	// }
-
-	// wg.Wait()
-	// if scrErr != nil {
-	// 	log.Print(err)
-	// 	outputErrorMsg(w, http.StatusInternalServerError, "failed to request to shipment service")
-	// 	tx.Rollback()
-
-	// 	return
-	// }
-
 	if pstr.Status == "invalid" {
 		outputErrorMsg(w, http.StatusBadRequest, "カード情報に誤りがあります")
+		tx.Rollback()
 		return
 	}
 
 	if pstr.Status == "fail" {
 		outputErrorMsg(w, http.StatusBadRequest, "カードの残高が足りません")
+		tx.Rollback()
 		return
 	}
 
 	if pstr.Status != "ok" {
 		outputErrorMsg(w, http.StatusBadRequest, "想定外のエラー")
+		tx.Rollback()
 		return
 	}
 
@@ -1537,17 +1514,20 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 
 		outputErrorMsg(w, http.StatusInternalServerError, "db error")
+		tx.Rollback()
 		return
 	}
+
+	tx.Commit()
 
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	json.NewEncoder(w).Encode(resBuy{TransactionEvidenceID: transactionEvidenceID})
 
-	// _, ok = soldOutList[int(rb.ItemID)]
-	// if ok == false {
-	// 	log.Print(err, "Add soldOutList2", targetItem.ID)
-	// 	soldOutList[int(rb.ItemID)] = &targetItem
-	// }
+	_, ok = soldOutList[int(rb.ItemID)]
+	if ok == false {
+		log.Print(err, "Add soldOutList2", targetItem.ID)
+		soldOutList[int(rb.ItemID)] = &targetItem
+	}
 }
 
 func postShip(w http.ResponseWriter, r *http.Request) {
