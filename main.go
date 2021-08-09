@@ -1441,19 +1441,6 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// scr, err := APIShipmentCreate(getShipmentServiceURL(), &APIShipmentCreateReq{
-	// 	ToAddress:   buyer.Address,
-	// 	ToName:      buyer.AccountName,
-	// 	FromAddress: seller.Address,
-	// 	FromName:    seller.AccountName,
-	// })
-	// if err != nil {
-	// 	log.Print(err)
-	// 	outputErrorMsg(w, http.StatusInternalServerError, "failed to request to shipment service")
-
-	// 	return
-	// }
-
 	var scr *APIShipmentCreateRes
 	var scrErr error
 	var wg sync.WaitGroup
@@ -1490,7 +1477,6 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-
 	if pstr.Status == "invalid" {
 		outputErrorMsg(w, http.StatusBadRequest, "カード情報に誤りがあります")
 		return
