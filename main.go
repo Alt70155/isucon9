@@ -340,16 +340,16 @@ func main() {
 		categoryList[cate.ID] = cate
 	}
 
-	soldOutList = make(map[int]*Item)
-	soldOutAll = []*Item{}
-	err = dbx.Select(&soldOutAll, "SELECT * FROM items where status = 'sold_out'")
-	if err != nil {
-		log.Fatalf("failed to sold out select query: %s.", err.Error())
-	}
+	// soldOutList = make(map[int]*Item)
+	// soldOutAll = []*Item{}
+	// err = dbx.Select(&soldOutAll, "SELECT * FROM items where status = 'sold_out'")
+	// if err != nil {
+	// 	log.Fatalf("failed to sold out select query: %s.", err.Error())
+	// }
 
-	for _, item := range soldOutAll {
-		soldOutList[int(item.ID)] = item
-	}
+	// for _, item := range soldOutAll {
+	// 	soldOutList[int(item.ID)] = item
+	// }
 
 	// API
 	mux.HandleFunc(pat.Post("/initialize"), postInitialize)
