@@ -1469,15 +1469,6 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		})
 	}()
 
-	wg.Wait()
-	if scrErr != nil {
-		log.Print(err)
-		outputErrorMsg(w, http.StatusInternalServerError, "failed to request to shipment service")
-		tx.Rollback()
-
-		return
-	}
-
 	pstr, err := APIPaymentToken(getPaymentServiceURL(), &APIPaymentServiceTokenReq{
 		ShopID: PaymentServiceIsucariShopID,
 		Token:  rb.Token,
@@ -1488,6 +1479,15 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 
 		outputErrorMsg(w, http.StatusInternalServerError, "payment service is failed")
+		return
+	}
+
+	wg.Wait()
+	if scrErr != nil {
+		log.Print(err)
+		outputErrorMsg(w, http.StatusInternalServerError, "failed to request to shipment service")
+		tx.Rollback()
+
 		return
 	}
 
