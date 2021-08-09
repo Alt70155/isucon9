@@ -1339,7 +1339,7 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 
 	targetItem := Item{}
 
-	// _, ok := soldOutList[int(rb.ItemID)]
+	// // _, ok := soldOutList[int(rb.ItemID)]
 
 	// if ok {
 	// 	outputErrorMsg(w, http.StatusForbidden, "item is not for sale")
