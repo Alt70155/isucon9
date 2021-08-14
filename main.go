@@ -1005,7 +1005,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Println("My Log: ", len(users))
+	fmt.Println("[My Log] users len: ", len(users))
 
 	for _, item := range items {
 		// seller, err := getUserSimpleByID(tx, item.SellerID)
@@ -1014,7 +1014,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 		// 	tx.Rollback()
 		// 	return
 		// }
-		fmt.Println("My Log: ", item.SellerID)
+		fmt.Println("[My Log] item seller id: ", item.SellerID)
 		seller, ok := users[item.SellerID]
 		if !ok {
 			outputErrorMsg(w, http.StatusNotFound, "seller not found")
