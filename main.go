@@ -14,7 +14,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"sync"
 	"time"
 
 	_ "net/http/pprof"
@@ -1452,33 +1451,33 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// scr, err := APIShipmentCreate(getShipmentServiceURL(), &APIShipmentCreateReq{
-	// 	ToAddress:   buyer.Address,
-	// 	ToName:      buyer.AccountName,
-	// 	FromAddress: seller.Address,
-	// 	FromName:    seller.AccountName,
-	// })
-	// if err != nil {
-	// 	log.Print(err)
-	// 	outputErrorMsg(w, http.StatusInternalServerError, "failed to request to shipment service")
-	// 	tx.Rollback()
+	scr, err := APIShipmentCreate(getShipmentServiceURL(), &APIShipmentCreateReq{
+		ToAddress:   buyer.Address,
+		ToName:      buyer.AccountName,
+		FromAddress: seller.Address,
+		FromName:    seller.AccountName,
+	})
+	if err != nil {
+		log.Print(err)
+		outputErrorMsg(w, http.StatusInternalServerError, "failed to request to shipment service")
+		tx.Rollback()
 
-	// 	return
-	// }
+		return
+	}
 
-	var scr *APIShipmentCreateRes
-	var scrErr error
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		scr, scrErr = APIShipmentCreate(getShipmentServiceURL(), &APIShipmentCreateReq{
-			ToAddress:   buyer.Address,
-			ToName:      buyer.AccountName,
-			FromAddress: seller.Address,
-			FromName:    seller.AccountName,
-		})
-	}()
+	// var scr *APIShipmentCreateRes
+	// var scrErr error
+	// var wg sync.WaitGroup
+	// wg.Add(1)
+	// go func() {
+	// 	defer wg.Done()
+	// 	scr, scrErr = APIShipmentCreate(getShipmentServiceURL(), &APIShipmentCreateReq{
+	// 		ToAddress:   buyer.Address,
+	// 		ToName:      buyer.AccountName,
+	// 		FromAddress: seller.Address,
+	// 		FromName:    seller.AccountName,
+	// 	})
+	// }()
 
 	pstr, err := APIPaymentToken(getPaymentServiceURL(), &APIPaymentServiceTokenReq{
 		ShopID: PaymentServiceIsucariShopID,
@@ -1494,14 +1493,14 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	wg.Wait()
-	if scrErr != nil {
-		log.Print(err)
-		outputErrorMsg(w, http.StatusInternalServerError, "failed to request to shipment service")
-		tx.Rollback()
+	// wg.Wait()
+	// if scrErr != nil {
+	// 	log.Print(err)
+	// 	outputErrorMsg(w, http.StatusInternalServerError, "failed to request to shipment service")
+	// 	tx.Rollback()
 
-		return
-	}
+	// 	return
+	// }
 
 	if pstr.Status == "invalid" {
 		outputErrorMsg(w, http.StatusBadRequest, "カード情報に誤りがあります")
