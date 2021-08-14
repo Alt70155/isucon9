@@ -962,13 +962,63 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	itemDetails := []ItemDetail{}
+
+	itemIDs := make([]interface{}, 0, len(items))
+	userIdUnique := make(map[int64]struct{})
+	var userIds []interface{}
+
 	for _, item := range items {
-		seller, err := getUserSimpleByID(tx, item.SellerID)
+		itemIDs = append(itemIDs, item.ID)
+		sellerId := item.SellerID
+		if _, ok := userIdUnique[sellerId]; !ok {
+			userIds = append(userIds, sellerId)
+			userIdUnique[sellerId] = struct{}{}
+		}
+	}
+
+	var users map[int64]*UserSimple
+
+	if len(userIds) > 0 {
+		query, args, err := sqlx.In("SELECT * FROM `users` WHERE `id` IN (?)", userIds)
 		if err != nil {
+			log.Print(err)
+			outputErrorMsg(w, http.StatusInternalServerError, "db error")
+			tx.Rollback()
+			return
+		}
+		var s []User
+		err = tx.Select(&s, query, args...)
+		if err != nil {
+			log.Print(err)
+			outputErrorMsg(w, http.StatusInternalServerError, "db error")
+			tx.Rollback()
+			return
+		}
+
+		users = make(map[int64]*UserSimple)
+		for _, user := range s {
+			users[user.ID] = &UserSimple{
+				ID:           user.ID,
+				AccountName:  user.AccountName,
+				NumSellItems: user.NumSellItems,
+			}
+		}
+	}
+
+	for _, item := range items {
+		// seller, err := getUserSimpleByID(tx, item.SellerID)
+		// if err != nil {
+		// 	outputErrorMsg(w, http.StatusNotFound, "seller not found")
+		// 	tx.Rollback()
+		// 	return
+		// }
+		seller, ok := users[item.SellerID]
+		if !ok {
 			outputErrorMsg(w, http.StatusNotFound, "seller not found")
 			tx.Rollback()
 			return
 		}
+
 		category, err := getCategoryByID(tx, item.CategoryID)
 		if err != nil {
 			outputErrorMsg(w, http.StatusNotFound, "category not found")
@@ -979,7 +1029,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 		itemDetail := ItemDetail{
 			ID:       item.ID,
 			SellerID: item.SellerID,
-			Seller:   &seller,
+			Seller:   seller,
 			// BuyerID
 			// Buyer
 			Status:      item.Status,
@@ -996,14 +1046,15 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if item.BuyerID != 0 {
-			buyer, err := getUserSimpleByID(tx, item.BuyerID)
-			if err != nil {
+			// buyer, err := getUserSimpleByID(tx, item.BuyerID)
+			buyer, ok := users[item.BuyerID]
+			if !ok {
 				outputErrorMsg(w, http.StatusNotFound, "buyer not found")
 				tx.Rollback()
 				return
 			}
 			itemDetail.BuyerID = item.BuyerID
-			itemDetail.Buyer = &buyer
+			itemDetail.Buyer = buyer
 		}
 
 		transactionEvidence := TransactionEvidence{}
