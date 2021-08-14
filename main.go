@@ -551,6 +551,15 @@ func postInitialize(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
+func contains(s []interface{}, e int64) bool {
+	for _, v := range s {
+		if e == v {
+			return true
+		}
+	}
+	return false
+}
+
 func getNewItems(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	itemIDStr := query.Get("item_id")
@@ -606,10 +615,45 @@ func getNewItems(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	itemSimples := []ItemSimple{}
+	// this
+	var userIdList []interface{}
 	for _, item := range items {
-		seller, err := getUserSimpleByID(dbx, item.SellerID)
+		sellerID := item.SellerID
+		if !contains(userIdList, sellerID) {
+			userIdList = append(userIdList, sellerID)
+		}
+	}
+
+	var users map[int64]*UserSimple
+	if len(userIdList) > 0 {
+		query, args, err := sqlx.In("SELECT * FROM `users` WHERE `id` IN (?)", userIdList)
 		if err != nil {
+			log.Print(err)
+			outputErrorMsg(w, http.StatusInternalServerError, "db error")
+			return
+		}
+		var s []User
+		err = dbx.Select(&s, query, args...)
+		if err != nil {
+			log.Print(err)
+			outputErrorMsg(w, http.StatusInternalServerError, "db error")
+			return
+		}
+		for _, user := range s {
+			users[user.ID] = &UserSimple{
+				ID:           user.ID,
+				AccountName:  user.AccountName,
+				NumSellItems: user.NumSellItems,
+			}
+		}
+	}
+
+	itemSimples := []ItemSimple{}
+
+	for _, item := range items {
+		// seller, err := getUserSimpleByID(dbx, item.SellerID)
+		seller, ok := users[item.SellerID]
+		if !ok {
 			outputErrorMsg(w, http.StatusNotFound, "seller not found")
 			return
 		}
@@ -621,7 +665,7 @@ func getNewItems(w http.ResponseWriter, r *http.Request) {
 		itemSimples = append(itemSimples, ItemSimple{
 			ID:         item.ID,
 			SellerID:   item.SellerID,
-			Seller:     &seller,
+			Seller:     seller,
 			Status:     item.Status,
 			Name:       item.Name,
 			Price:      item.Price,
