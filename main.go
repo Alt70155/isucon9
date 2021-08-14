@@ -641,22 +641,14 @@ func getNewItems(w http.ResponseWriter, r *http.Request) {
 			outputErrorMsg(w, http.StatusInternalServerError, "db error")
 			return
 		}
+
+		users = make(map[int64]*UserSimple)
 		for _, user := range s {
-			fmt.Println("[My Log] user id: ", user.ID)
-			fmt.Println("[My Log] user AccountName: ", user.AccountName)
-			fmt.Println("[My Log] user NumSellItems: ", user.NumSellItems)
-			us := &UserSimple{
+			users[user.ID] = &UserSimple{
 				ID:           user.ID,
 				AccountName:  user.AccountName,
 				NumSellItems: user.NumSellItems,
 			}
-			users[user.ID] = us
-			// users[user.ID] = &UserSimple{
-			// 	ID:           user.ID,
-			// 	AccountName:  user.AccountName,
-			// 	NumSellItems: user.NumSellItems,
-			// }
-			fmt.Println("[My Log] us: ", us)
 		}
 	}
 
