@@ -1,4 +1,4 @@
-git pull origin main
+git pull origin dev
 make
 sudo systemctl restart isucari.golang.service
 sleep 3

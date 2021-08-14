@@ -1051,9 +1051,11 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 
 		if item.BuyerID != 0 {
 			// buyer, err := getUserSimpleByID(tx, item.BuyerID)
+			fmt.Println("[My Log] item buyer id: ", item.BuyerID)
 			buyer, ok := users[item.BuyerID]
 			if !ok {
 				outputErrorMsg(w, http.StatusNotFound, "buyer not found")
+				fmt.Println("[My Log] item buyer id, Not Found: ", item.BuyerID)
 				tx.Rollback()
 				return
 			}
