@@ -974,6 +974,11 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 			userIds = append(userIds, sellerId)
 			userIdUnique[sellerId] = struct{}{}
 		}
+		buyerId := item.BuyerID
+		if _, ok := userIdUnique[buyerId]; !ok {
+			userIds = append(userIds, buyerId)
+			userIdUnique[buyerId] = struct{}{}
+		}
 	}
 
 	var users map[int64]*UserSimple
