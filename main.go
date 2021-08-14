@@ -642,7 +642,9 @@ func getNewItems(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		for _, user := range s {
-			fmt.Print("[My Log] user: ", user)
+			fmt.Print("[My Log] user id: ", user.ID)
+			fmt.Print("[My Log] user AccountName: ", user.AccountName)
+			fmt.Print("[My Log] user NumSellItems: ", user.NumSellItems)
 			users[user.ID] = &UserSimple{
 				ID:           user.ID,
 				AccountName:  user.AccountName,
