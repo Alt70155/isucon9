@@ -624,6 +624,8 @@ func getNewItems(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	fmt.Println("[My Log] userIdList: ", userIdList)
+
 	var users map[int64]*UserSimple
 	if len(userIdList) > 0 {
 		query, args, err := sqlx.In("SELECT * FROM `users` WHERE `id` IN (?)", userIdList)
@@ -653,6 +655,9 @@ func getNewItems(w http.ResponseWriter, r *http.Request) {
 	for _, item := range items {
 		// seller, err := getUserSimpleByID(dbx, item.SellerID)
 		seller, ok := users[item.SellerID]
+		fmt.Println("[My Log] sellerID: ", item.SellerID)
+		fmt.Println("[My Log] seller: ", seller)
+
 		if !ok {
 			outputErrorMsg(w, http.StatusNotFound, "seller not found")
 			return
@@ -1054,11 +1059,6 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Println("[My Log] users len: ", len(users))
-	for _, user := range users {
-		fmt.Println("[My Log] user: ", user)
-	}
-
 	for _, item := range items {
 		// seller, err := getUserSimpleByID(tx, item.SellerID)
 		// if err != nil {
@@ -1066,11 +1066,9 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 		// 	tx.Rollback()
 		// 	return
 		// }
-		fmt.Println("[My Log] item seller id: ", item.SellerID)
 		seller, ok := users[item.SellerID]
 		if !ok {
 			outputErrorMsg(w, http.StatusNotFound, "seller not found")
-			fmt.Println("[My Log] item seller id, Not Found: ", item.SellerID)
 			tx.Rollback()
 			return
 		}
@@ -1103,11 +1101,9 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 
 		if item.BuyerID != 0 {
 			// buyer, err := getUserSimpleByID(tx, item.BuyerID)
-			fmt.Println("[My Log] item buyer id: ", item.BuyerID)
 			buyer, ok := users[item.BuyerID]
 			if !ok {
 				outputErrorMsg(w, http.StatusNotFound, "buyer not found")
-				fmt.Println("[My Log] item buyer id, Not Found: ", item.BuyerID)
 				tx.Rollback()
 				return
 			}
