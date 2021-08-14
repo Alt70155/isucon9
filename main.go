@@ -1018,6 +1018,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 		seller, ok := users[item.SellerID]
 		if !ok {
 			outputErrorMsg(w, http.StatusNotFound, "seller not found")
+			fmt.Println("[My Log] item seller id, Not Found: ", item.SellerID)
 			tx.Rollback()
 			return
 		}
