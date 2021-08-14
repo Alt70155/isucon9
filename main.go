@@ -1006,6 +1006,9 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Println("[My Log] users len: ", len(users))
+	for _, user := range users {
+		fmt.Println("[My Log] user: ", user)
+	}
 
 	for _, item := range items {
 		// seller, err := getUserSimpleByID(tx, item.SellerID)
