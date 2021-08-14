@@ -650,6 +650,7 @@ func getNewItems(w http.ResponseWriter, r *http.Request) {
 				AccountName:  user.AccountName,
 				NumSellItems: user.NumSellItems,
 			}
+			users[user.ID] = us
 			// users[user.ID] = &UserSimple{
 			// 	ID:           user.ID,
 			// 	AccountName:  user.AccountName,
