@@ -641,10 +641,8 @@ func getNewItems(w http.ResponseWriter, r *http.Request) {
 			outputErrorMsg(w, http.StatusInternalServerError, "db error")
 			return
 		}
-		fmt.Println("[My Log] len s: ", len(s))
-		fmt.Println("[My Log] s[0]: ", s[0])
-		fmt.Println("[My Log] s[0].AccountName: ", s[0].AccountName)
 		for _, user := range s {
+			fmt.Print("[My Log] user: ", user)
 			users[user.ID] = &UserSimple{
 				ID:           user.ID,
 				AccountName:  user.AccountName,
