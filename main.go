@@ -349,6 +349,8 @@ func main() {
 		categoryList[cate.ID] = cate
 	}
 
+	memoConfig()
+
 	// soldOutList = make(map[int]*Item)
 	// soldOutAll = []*Item{}
 	// err = dbx.Select(&soldOutAll, "SELECT * FROM items where status = 'sold_out'")
@@ -466,6 +468,30 @@ func getCategoryByID(q sqlx.Queryer, categoryID int) (myCategory Category, err e
 	}
 
 	return myCategory, err
+}
+
+var (
+	configList = make(map[string]Config)
+	configArr  = []Config{}
+)
+
+func memoConfig() {
+	configList = make(map[string]Config)
+	configArr = []Config{}
+
+	err := dbx.Select(&configArr, "SELECT * FROM `configs`")
+	if err != nil {
+		log.Print(err)
+		return
+	}
+
+	for _, conf := range configArr {
+		configList[conf.Name] = conf
+	}
+
+	for _, conf := range configList {
+		fmt.Println("[My Log] conf: ", conf)
+	}
 }
 
 func getConfigByName(name string) (string, error) {
@@ -1062,12 +1088,6 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, item := range items {
-		// seller, err := getUserSimpleByID(tx, item.SellerID)
-		// if err != nil {
-		// 	outputErrorMsg(w, http.StatusNotFound, "seller not found")
-		// 	tx.Rollback()
-		// 	return
-		// }
 		seller, ok := users[item.SellerID]
 		if !ok {
 			outputErrorMsg(w, http.StatusNotFound, "seller not found")
