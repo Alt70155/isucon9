@@ -495,16 +495,13 @@ func memoConfig() {
 }
 
 func getConfigByName(name string) (string, error) {
-	config := Config{}
-	err := dbx.Get(&config, "SELECT * FROM `configs` WHERE `name` = ?", name)
-	if err == sql.ErrNoRows {
+	var config Config
+	config, ok := configList[name]
+	if !ok {
 		return "", nil
 	}
-	if err != nil {
-		log.Print(err)
-		return "", err
-	}
-	return config.Val, err
+
+	return config.Val, nil
 }
 
 func getPaymentServiceURL() string {
