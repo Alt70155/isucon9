@@ -995,7 +995,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	if itemID > 0 && createdAt > 0 {
 		// paging
 		err := tx.Select(&items,
-			"(SELECT * FROM `items` WHERE `seller_id` = ? AND `status` IN (?,?,?,?,?) AND (`created_at` < ?  OR (`created_at` <= ? AND `id` < ?)) ORDER BY `created_at` DESC, `id` DESC LIMIT ?) UNION (SELECT * FROM `items` WHERE `buyer_id` = ? AND `status` IN (?,?,?,?,?) AND (`created_at` < ?  OR (`created_at` <= ? AND `id` < ?)) ORDER BY `created_at` DESC, `id` DESC LIMIT ?)",
+			"(SELECT * FROM `items` WHERE `seller_id` = ? AND `status` IN (?,?,?,?,?) AND (`created_at` < ?  OR (`created_at` <= ? AND `id` < ?)) LIMIT ?) UNION (SELECT * FROM `items` WHERE `buyer_id` = ? AND `status` IN (?,?,?,?,?) AND (`created_at` < ?  OR (`created_at` <= ? AND `id` < ?)) LIMIT ?) ORDER BY `created_at` DESC, `id` DESC ",
 			user.ID,
 			ItemStatusOnSale,
 			ItemStatusTrading,
@@ -1026,7 +1026,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// 1st page
 		err := tx.Select(&items,
-			"(SELECT * FROM `items` WHERE `seller_id` = ? AND `status` IN (?,?,?,?,?) ORDER BY `created_at` DESC, `id` DESC LIMIT ?) UNION (SELECT * FROM `items` WHERE `buyer_id` = ? AND `status` IN (?,?,?,?,?) ORDER BY `created_at` DESC, `id` DESC LIMIT ?)",
+			"(SELECT * FROM `items` WHERE `seller_id` = ? AND `status` IN (?,?,?,?,?) LIMIT ?) UNION (SELECT * FROM `items` WHERE `buyer_id` = ? AND `status` IN (?,?,?,?,?) LIMIT ?) ORDER BY `created_at` DESC, `id` DESC ",
 			user.ID,
 			ItemStatusOnSale,
 			ItemStatusTrading,
