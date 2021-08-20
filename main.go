@@ -1007,6 +1007,17 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 			time.Unix(createdAt, 0),
 			itemID,
 			TransactionsPerPage+1,
+			user.ID,
+			user.ID,
+			ItemStatusOnSale,
+			ItemStatusTrading,
+			ItemStatusSoldOut,
+			ItemStatusCancel,
+			ItemStatusStop,
+			time.Unix(createdAt, 0),
+			time.Unix(createdAt, 0),
+			itemID,
+			TransactionsPerPage+1,
 		)
 		if err != nil {
 			log.Print(err)
@@ -1018,6 +1029,14 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 		// 1st page
 		err := tx.Select(&items,
 			"(SELECT * FROM `items` WHERE `seller_id` = ? AND `status` IN (?,?,?,?,?) ORDER BY `created_at` DESC, `id` DESC LIMIT ?) UNION (SELECT * FROM `items` WHERE `buyer_id` = ? AND `status` IN (?,?,?,?,?) ORDER BY `created_at` DESC, `id` DESC LIMIT ?)",
+			user.ID,
+			user.ID,
+			ItemStatusOnSale,
+			ItemStatusTrading,
+			ItemStatusSoldOut,
+			ItemStatusCancel,
+			ItemStatusStop,
+			TransactionsPerPage+1,
 			user.ID,
 			user.ID,
 			ItemStatusOnSale,
